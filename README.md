@@ -1,4 +1,4 @@
-# Git Practice 
+# Computational NMR project with Deep Learning
 
 This repository contains python scripts to generate NMR data as well as sample deep learning algorithms for my computational NMR projects.
 
@@ -20,7 +20,7 @@ Once you have anaconda, you need to install Tensorflow on your anaconda environm
 
 ## Built With
 
-* [Anaconda](https://www.anaconda.com/) - A distribution of the Python and R programming languages for scientific computing that aims to simplify package management and deployment.
+* [Anaconda](https://www.anaconda.com/) - a distribution of the Python and R programming languages for scientific computing that aims to simplify package management and deployment.
 
 * [TensorFlow](https://www.tensorflow.org/) - a free and open-source software library for machine learning and artificial intelligence 
 
