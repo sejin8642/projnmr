@@ -25,7 +25,7 @@ def moleculesGenerator(min_N = 4, max_N = 10):
     molecules: dict[str]:(molecule, float)
         Dictionary of molecules with their relative abundances
     """
-    # hydrogen clusters (first and later) for groups list and their size
+    # hydrogen clusters (first and later) for groups list and their sizes
     backbones = [
             'methane',
             'ethane', 
@@ -62,15 +62,14 @@ def moleculesGenerator(min_N = 4, max_N = 10):
             [2, 1, 1, 3],
             [2, 2, 1, 2],
             [2, 3, 1, 3]]
-    size = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4] 
+    sizes = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4] 
    
-    # index for the first group
-    ind = np.random.randint(0, 11)
+    # backbone attachment for the first cluster
+    ind = np.random.randint(0, 11) # index for the first group
     indices = [ind] # indices of backbones in order
-    length = size[ind] # length of groups 
+    length = sizes[ind] # length of groups 
     groups = FG[ind] # hydrogen groups with their hydrogen count
     cut = [length] # indices for cluster separation
-    isobutane = [ind//10] # to indicate which cluster is isobutane backbone
 
     # condition for while loop for more clusters
     def cond():
@@ -85,19 +84,18 @@ def moleculesGenerator(min_N = 4, max_N = 10):
         ind = np.random.randint(0, length)
         if groups[ind] != 1: groups[ind] -= 1 
 
-        # index for later groups
+        # same code block from above
         ind = np.random.randint(0, 11)
-        if max_N < length + size[ind]:
+        if max_N < length + sizes[ind]:
             break
         indices.append(ind)
-        length += size[ind]
+        length += sizes[ind]
         groups.extend(MG[ind])
         cut.append(length)
-        isobutane.append(ind//10)
 
     # get rid of duplicate methyl groups for isobutane backbone
-    for n, x in enumerate(isobutane):
-        if x == 1:
+    for n, x in enumerate(indices):
+        if x == 10:
             if (groups[cut[n]-1] == 3) and (groups[cut[n]-3] == 3):
                 groups[cut[n]-1] = np.random.randint(1, 3) 
 
@@ -107,15 +105,23 @@ def moleculesGenerator(min_N = 4, max_N = 10):
         if groups[ind] != 1: groups[ind] -= 1 
 
     # create equivalent hydrogen groups randomly and combine their total hydrogen count
-    FG = [
-            [3, 3], 
-            [3, 2, 3],
-            [3, 2, 2, 3], 
-            [2, 1, 2, 3],
-            [3, 2, 1, 2]]
+    def equiv(n, size):
+        if np.random.randint(0, 2):
+            if groups[cut[n]-1] == 3 and groups[cut[n]-2] == 2:
+                groups[cut[n]-1] = np.random.choice([4, 6]) 
+                groups[cut[n]-2] = 1
+
+        if np.random.randint(0, 2):
+            if groups[cut[n]-size] == 3 and groups[cut[n]-size+1] == 2:
+                groups[cut[n]-size] = np.random.choice([4, 6]) 
+                groups[cut[n]-size+1] = 1
+
     equi = [1, 3, 6, 7, 9]
     for n, ind in enumerate(indices):
         if ind in equi:
-            if groups(cut[n]
+            equiv(n, sizes[ind])
 
-    return groups, cut, isobutane, indices
+    
+
+    return groups, cut, indices
+
