@@ -3,6 +3,8 @@ import sys
 sys.path.insert(1, '/home/sejin8642/gd/ftnmr/scripts')
 
 import numpy as np
+from numpy.random import uniform
+from string import ascii_letters as al
 from ftnmr import spectrometer
 
 def moleculesGenerator(min_N = 4, max_N = 10):
@@ -121,7 +123,19 @@ def moleculesGenerator(min_N = 4, max_N = 10):
         if ind in equi:
             equiv(n, sizes[ind])
 
-    
+    # random shift to incorporate aldehyde shift ~ 9.7
+    def rand(x):
+        if x != 1:
+            return uniform(0.5, 6.0)
+        else:
+            if np.random.randint(0, 10):
+                return uniform(0.5, 6.0)
+            else:
+                return uniform(9.0, 10.0)
 
-    return groups, cut, indices
+    # basic hydrogen groups dictionary (100 < T2 < 250) and couplings list (2 < J <20)
+    hydrogens = {al[n]:(x, rand(x), uniform(100.0, 250.0)) for n, x in enumerate(groups)}
+    couplings = [(al[n-1], al[n], uniform(2.0, 20.0)) for n in range(1, length) if n not in cut]
+
+    return hydrogens, couplings
 
