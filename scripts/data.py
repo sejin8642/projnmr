@@ -1,36 +1,60 @@
 # python  script to generate random data set using ftnmr module with baseline artifact
-import h5py
-from ftnmr import *
-from concurrent import futures
+import sys
+sys.path.insert(1, '/home/sejin8642/gd/ftnmr/scripts')
 
-def generate(n, m, b, name='data'):
+import h5py
+import numpy as np
+from ftnmr import *
+from projnmr import metaboliteGenerator as mg
+from numpy.random import uniform, randint
+from concurrent import futures
+from string import ascii_letters as al
+
+def generateData(n, N, filename='filename', data_size=256, dtype='float32'):
     """
-    generate function simulates ftnmr.measure output and saves it as hdf5 files.
+    generateData simulates ftnmr.spectrometer.measure and saves its output as hdf5 files
     
     Parameters
     ----------
     n: int
-        Number of processed sample signal in each data block
+        n-th data block file index used for hdf5 file naming
     m: int
-        m-th block of dataset
-    b: int
-        Number of data blocks
-    name: str
-        Saved data file name (default data)
+        Total number of data blocks
+    filename: str
+        Saved data file name without hdf5 extension (default filename)
+    data_size: int
+        Mininum file size for each data and target in megabytes (default 256 mb)
+    dtype: str
+        Data type for the data (default float32)
     """
-    spec = spectrometer(t_cut=1500, std=0.00001)
-    data = np.zeros((n, spec.nf))
-    for i in range(n):
-        molecules = _
-        spec.artifact(baseline=True)
-        spec.measure(moles=molecules)
-        data[i] = spec.spectra
+    spec = spectrometer()
+    number_of_measurements = int(data_size*pow(2, 20)/spec.shift.nbytes)
 
-    with h5py.File(name + str(m).zfill(len(str(b))), 'w') as f:
-        pass
+    # preallocation of data
+    data = np.zeros((number_of_measurements, spec.nf)).astype(dtype)
+    targets = np.zeros((number_of_measurements, spec.nf)).astype(dtype)
+
+    for m in range(number_of_measurements):
+        moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
+        spec.artifact(baseline=True)
+        spec.measure(moles=moles)
+        targets[m] = spec.target.real
+        data[m] = spec.spectra.real
+
+    with h5py.File(filename + '_data' + str(n).zfill(len(str(N))) + '.hdf5', 'w') as f:
+        f.create_dataset('data', data=data, dtype=np.float32)
+
+    with h5py.File(filename + '_targ' + str(n).zfill(len(str(N))) + '.hdf5', 'w') as f:
+        f.create_dataset('target', data=targets, dtype=np.float32)
 
 def main():
+    spec = spectrometer()
+    with h5py.File('chemical_shift.hdf5', 'w') as f:
+        f.create_dataset('shift', data=spec.shift, dtype=np.float32)
+
+    N = 4 # number of data blocks for each data and targets
     with futures.ProcessPoolExecutor() as executor:
-        pass
+        for n in range(N):
+            executor.submit(generateData, n, N, 'baseline', 128)
 
 if __name__ == '__main__': main()

@@ -7,9 +7,9 @@ import numpy as np
 from numpy.random import uniform
 from string import ascii_letters as al
 
-def moleculesGenerator(min_N = 4, max_N = 10):
+def metaboliteGenerator(min_N = 4, max_N = 10):
     """
-    Generates random molecules 
+    Generates random metabolite
 
     Things to consider before modification
     hydrogens = {str:(total number, chemical shift, T2)}
