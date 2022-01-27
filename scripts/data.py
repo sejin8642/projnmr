@@ -10,7 +10,7 @@ from numpy.random import uniform, randint
 from concurrent import futures
 from string import ascii_letters as al
 
-def generateData(n, N, filename='filename', data_size=256, dtype='float32'):
+def generateData(n, N, filename='filename', data_size=50, dtype='float32'):
     """
     generateData simulates ftnmr.spectrometer.measure and saves its output as hdf5 files
     
@@ -38,8 +38,7 @@ def generateData(n, N, filename='filename', data_size=256, dtype='float32'):
         moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
         spec.artifact(baseline=True)
         spec.measure(moles=moles)
-        targets[m] = spec.target.real
-        data[m] = spec.spectra.real
+        data[m], targets[m] = spec()
 
     with h5py.File(filename + '_data' + str(n).zfill(len(str(N))) + '.hdf5', 'w') as f:
         f.create_dataset('data', data=data, dtype=np.float32)
@@ -52,9 +51,10 @@ def main():
     with h5py.File('chemical_shift.hdf5', 'w') as f:
         f.create_dataset('shift', data=spec.shift, dtype=np.float32)
 
-    N = 4 # number of data blocks for each data and targets
+    N = 7 # number of data blocks for each data and targets
     with futures.ProcessPoolExecutor() as executor:
         for n in range(N):
             executor.submit(generateData, n, N, 'baseline', 128)
 
-if __name__ == '__main__': main()
+if __name__ == '__main__': 
+    main()
