@@ -41,39 +41,35 @@ def generateData(
     """
 
     # file name configurations
-    file_number = str(n).zfill(len(str(N))
-    logname = filename + file_number + dt.today().strftime(".%Y-%m-%d.log")
+    file_number = str(n).zfill(len(str(N)))
+    log_date = dt.datetime.today() + dt.timedelta(hours=hours) 
+    log_name = filename + file_number + log_date.strftime(".%Y-%m-%d.log")
 
     # spectrometer object instantiation with total number of measurements
     spec = spectrometer()
-    number_of_measurements = int(data_size*pow(2, 20)/spec.shift.nbytes)
+    number_of_measurements = int(data_size*pow(2, 19)/spec.shift.nbytes)
     NofM_str = str(number_of_measurements)
+    digits = len(NofM_str)
 
     # logging configuration with input log name to append info to 
-    logging.basicConfig(filename = logname, level=logging.DEBUG)
+    logging.basicConfig(filename = log_name, level=logging.DEBUG)
 
-    # preallocation of data
-    data = np.zeros((number_of_measurements, spec.nf)).astype(dtype)
-    targets = np.zeros((number_of_measurements, spec.nf)).astype(dtype)
+    # dynamically simulate and write data to hdf5 file
+    with h5py.FIle(filename + file_number + ".hdf5", 'w') as f:
+        f.create_dataset("data", (number_of_measurements, spec.nf), dtype=np.float32)
+        f.create_dataset("target", (number_of_measurements, spec.nf), dtype=np.float32)
 
-    # random generation and measurements of metabolites
-    for m in range(number_of_measurements):
-        moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
-        spec.artifact(baseline=True)
-        spec.measure(moles=moles)
-        data[m], targets[m] = spec()
-        message = str(m).zfill(len(NofM_str)) + '/' + NofM_str + " measurements are done "
-        timestamp = dt.datetime.now() + dt.timedelta(hours=hours)
+        # random generation and measurements of metabolites
+        for m in range(number_of_measurements):
+            moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
+            spec.artifact(baseline=True)
+            spec.measure(moles=moles)
+            f["data"][m, :], f["target"][m, :] = spec()
 
-        # log info to append
-        logging.info(message + timestamp.strftime("(%H:%M:%S)."))
-
-    # save simulated data and targets
-    with h5py.File(filename + '_data' + file_number + '.hdf5', 'w') as f:
-        f.create_dataset('data', data=data, dtype=np.float32)
-
-    with h5py.File(filename + '_targ' + file_number + '.hdf5', 'w') as f:
-        f.create_dataset('target', data=targets, dtype=np.float32)
+            # log info to append
+            message = str(m).zfill(digits) + '/' + NofM_str + " measurements are done "
+            timestamp = dt.datetime.now() + dt.timedelta(hours=hours)
+            logging.info(message + timestamp.strftime("(%H:%M:%S)."))
 
 def main():
     # chemical shift range for the data
@@ -81,13 +77,14 @@ def main():
     with h5py.File('chemical_shift.hdf5', 'w') as f:
         f.create_dataset('shift', data=spec.shift, dtype=np.float32)
 
-    N = 20 # number of data blocks for each data and targets
+    N = 16 # number of hdf5 data 
     hours = 14 # hours to delay timestamp for log info
 
     # get that data!!!
     with futures.ProcessPoolExecutor() as executor:
         for n in range(N):
-            executor.submit(generateData, n, N, hours, 'baseline', 128)
+            executor.submit(generateData, n, N, hours, "baseline", 256)
 
 if __name__ == '__main__': 
     mai()
+
