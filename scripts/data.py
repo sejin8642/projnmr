@@ -84,6 +84,7 @@ def main():
     data_dir_name = 'data'
     if Path(data_dir_name).exists():
         sys.exit(1)
+    Path('data').mkdir()
 
     # chemical shift range for the data
     spec = spectrometer()
@@ -96,7 +97,7 @@ def main():
     # get that data!!!
     with futures.ProcessPoolExecutor() as executor:
         for n in range(N):
-            executor.submit(generateData, n, N, hours, 'baseline', dir_name, 256)
+            executor.submit(generateData, n, N, hours, 'baseline', data_dir_name, 256)
 
 if __name__ == '__main__': 
     main()
