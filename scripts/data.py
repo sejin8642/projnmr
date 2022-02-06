@@ -3,8 +3,8 @@
 # python  script to generate random data set using ftnmr module with baseline artifact
 from pathlib import Path
 import sys
-sys.path.insert(1, Path.home()/gd/ftnmr/scripts)
-sys.path.insert(1, Path.home()/gd/projnmr/scripts)
+sys.path.insert(1, Path.home()/'gd'/'ftnmr'/'scripts')
+sys.path.insert(1, Path.home()/'gd'/'projnmr'/'scripts')
 
 import h5py
 import numpy as np
