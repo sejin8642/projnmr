@@ -1,6 +1,7 @@
 # A list of functions for ftnmr.spectrometer
+from pathlib import Path
 import sys
-sys.path.insert(1, '/home/sejin8642/gd/ftnmr/scripts')
+sys.path.insert(1, Path.home()/gd/ftnmr/scripts)
 
 import ftnmr
 import numpy as np
