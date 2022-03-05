@@ -83,7 +83,7 @@ def generateData(
                 f['data'][m, :], f['target'][m, :] = spec()
 
             # log info to append
-            message = str(p).zfill(digits) + '/' + NofM_str + " measurements done"
+            message = str(p+log_step_size).zfill(digits) + '/' + NofM_str + " measurements done"
             logging.info(message)
 
 def main():
