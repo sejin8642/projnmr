@@ -21,8 +21,10 @@ def generateData(
         N,
         hours=0,
         dir_path=Path.cwd(),
-        data_name='filename',
-        dir_name='data',
+        file_name='filename',
+        timestamp='2022',
+        data_dir='data',
+        log_dir='log',
         data_size_power=7,
         dtype='float32'):
     """
@@ -37,23 +39,22 @@ def generateData(
     hours: int
         hours to delay timestamp for log info (used on remote clusters that have different time)
     dir_path: PosixPath (or None)
-        Posix directory path to put all the output (default None). If no path was provided,
+        Posix directory path to put all the output (default cwd). If no path was provided,
         all data will be saved in the current directory of the scrypt file
-    data_name: str
-        Saved data file name without hdf5 extension (default filename)
-    dir_name: str
+    file_name: str
+        Saved data and log file name without file extension (default filename)
+    data_dir: str
         directory name in which to save data
+    log_dir: str
+        directory name in which to save logs
     data_size_power: int
         Exponent of two that yields mininum hdf5 file size in megabytes 
         (default 7, which is pow(2, 7) or 128 megabytes)
     dtype: str
         Data type for the data (default float32)
     """
-    # file name configurations
-    file_number = str(n).zfill(len(str(N)))
-    log_date = dt.datetime.today() + dt.timedelta(hours=hours) 
-    log_name = data_name + file_number + log_date.strftime('.%Y-%m-%d.log')
-    file_name = data_name + file_number + '.hdf5'
+    # append index number to file name
+    file_name = file_name + str(n).zfill(len(str(N)))
 
     # spectrometer object instantiation with total number of measurements
     spec = spectrometer()
@@ -64,21 +65,16 @@ def generateData(
 
     # logging configuration with input log name to append info to 
     logging.basicConfig(
-            filename = dir_path / log_name,
+            filename = dir_path/log_dir/(file_name + '.log'),
             level=logging.DEBUG)
 
     # dynamically simulate and write data to hdf5 file
-    with h5py.File(dir_path / dir_name / file_name, 'w') as f:
+    with h5py.File(dir_path/data_dir/(file_name + '.hdf5'), 'w') as f:
         f.create_dataset('data', (number_of_measurements, spec.nf), dtype=np.float32)
         f.create_dataset('target', (number_of_measurements, spec.nf), dtype=np.float32)
 
         # random generation and measurements of metabolites
         for p in range(0, number_of_measurements, log_step_size):
-            # log info to append
-            message = str(p).zfill(digits) + '/' + NofM_str + " measurements are done "
-            timestamp = dt.datetime.now() + dt.timedelta(hours=hours)
-            logging.info(message + timestamp.strftime('(%H:%M:%S).'))
-
             # simulate and save data as hdf5
             for m in range(p, p + log_step_size):
                 moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
@@ -86,32 +82,26 @@ def generateData(
                 spec.measure(moles=moles)
                 f['data'][m, :], f['target'][m, :] = spec()
 
-    # log info to append
-    message = NofM_str + '/' + NofM_str + " measurements are done "
-    timestamp = dt.datetime.now() + dt.timedelta(hours=hours)
-    logging.info(message + timestamp.strftime('(%H:%M:%S).'))
+            # log info to append
+            message = str(p).zfill(digits) + '/' + NofM_str + " measurements done"
+            logging.info(message)
 
 def main():
-    # create a directory in which to save data
-    dir_path = Path.home()/'test_data'
-    if Path(dir_path).exists():
-        dir_name = 'data'
-        ind = 0
-        while Path(dir_path / (dir_name + str(ind).zfill(2))).exists():
-            ind += 1
-        dir_name = dir_name + str(ind).zfill(2)
-        Path(dir_path / dir_name).mkdir()
-    else:
-        print(dir_path, "does not exists")
-        sys.exit(1)
+    N = 4 # number of hdf5 data 
+    hours = 14 # hours to delay timestamp for log info (remote system might have different time)
+    dir_path = Path.cwd() # current working directory
+
+    # create directories in which to save data and logs
+    timestamp = (dt.datetime.now() + dt.timedelta(hours=hours)).strftime('.%Y-%m-%d~%I:%M%p')
+    data_dir = 'data' + timestamp
+    log_dir = 'log' + timestamp
+    Path(data_dir).mkdir()
+    Path(log_dir).mkdir()
 
     # chemical shift range for the data
     spec = spectrometer()
     with h5py.File(dir_path / 'chemical_shift.hdf5', 'w') as f:
         f.create_dataset('shift', data=spec.shift, dtype=np.float32)
-
-    N = 4 # number of hdf5 data 
-    hours = 14 # hours to delay timestamp for log info
 
     # get that data!!!
     with futures.ProcessPoolExecutor() as executor:
@@ -119,8 +109,9 @@ def main():
             executor.submit(generateData, n, N,
                     hours=hours, 
                     dir_path=dir_path, 
-                    data_name='baseline', 
-                    dir_name=dir_name, 
+                    file_name='baseline', 
+                    data_dir=data_dir, 
+                    log_dir=log_dir,
                     data_size_power=6,
                     dtype='float32')
 
