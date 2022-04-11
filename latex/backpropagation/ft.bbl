@@ -1,0 +1,54 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.1 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global}
+    \entry{Geron}{book}{}
+      \name{author}{1}{}{%
+        {{hash=fb48b65407d03cee0c164d17c1ea7eac}{%
+           family={Geron},
+           familyi={G\bibinitperiod},
+           given={Aurelien},
+           giveni={A\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {1005 Gravenstein Highway North, Sebastopol, CA 95472}%
+      }
+      \list{publisher}{1}{%
+        {O'Reily Media}%
+      }
+      \strng{namehash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \strng{fullhash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \strng{bibnamehash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \strng{authorbibnamehash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \strng{authornamehash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \strng{authorfullhash}{fb48b65407d03cee0c164d17c1ea7eac}
+      \field{sortinit}{G}
+      \field{sortinithash}{62eb2aa29549e4fdbd3cb154ec5711cb}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{edition}{2}
+      \field{isbn}{9781492032649}
+      \field{title}{Hands-on Machine learning with Scikit-learn, Keras, and Tensorflow}
+      \field{year}{2019}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

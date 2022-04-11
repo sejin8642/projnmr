@@ -1,0 +1,17 @@
+\BOOKMARK [0][]{cover.0}{Cover}{}% 1
+\BOOKMARK [1][]{preface.1}{Preface}{cover.0}% 2
+\BOOKMARK [1][]{toc.1}{Table of Contents}{cover.0}% 3
+\BOOKMARK [1][]{section.1}{Artificial Neural Network}{cover.0}% 4
+\BOOKMARK [2][]{subsection.1.1}{Neuron}{section.1}% 5
+\BOOKMARK [2][]{subsection.1.2}{Neural Variables}{section.1}% 6
+\BOOKMARK [2][]{subsection.1.3}{Neuron Output}{section.1}% 7
+\BOOKMARK [2][]{subsection.1.4}{Layer}{section.1}% 8
+\BOOKMARK [2][]{subsection.1.5}{Sequential Model}{section.1}% 9
+\BOOKMARK [2][]{subsection.1.6}{Dense Layer}{section.1}% 10
+\BOOKMARK [2][]{subsection.1.7}{Neural Network Variables}{section.1}% 11
+\BOOKMARK [1][]{section.2}{Backpropagation}{cover.0}% 12
+\BOOKMARK [2][]{subsection.2.1}{Cost Function}{section.2}% 13
+\BOOKMARK [2][]{subsection.2.2}{Gradient Descent}{section.2}% 14
+\BOOKMARK [2][]{subsection.2.3}{Partial Derivative of J}{section.2}% 15
+\BOOKMARK [1][]{section*.3}{References}{cover.0}% 16
+\BOOKMARK [1][]{section*.4}{Index}{cover.0}% 17

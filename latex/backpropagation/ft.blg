@@ -1,0 +1,17 @@
+[0] Config.pm:304> INFO - This is Biber 2.14 (beta)
+[0] Config.pm:307> INFO - Logfile is 'ft.blg'
+[58] biber:322> INFO - === Sun Apr 10, 2022, 16:59:54
+[70] Biber.pm:415> INFO - Reading 'ft.bcf'
+[119] Biber.pm:943> INFO - Found 1 citekeys in bib section 0
+[128] Biber.pm:4256> INFO - Processing section 0
+[128] Utils.pm:75> INFO - Globbing data source 'ft.bib'
+[128] Utils.pm:91> INFO - Globbed data source 'ft.bib' to ft.bib
+[138] Biber.pm:4455> INFO - Looking for bibtex format file 'ft.bib' for section 0
+[138] bibtex.pm:1653> INFO - LaTeX decoding ...
+[140] bibtex.pm:1471> INFO - Found BibTeX data source 'ft.bib'
+[173] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[173] UCollate.pm:68> INFO - Overriding locale 'en-US' defaults 'variable = shifted' with 'variable = non-ignorable'
+[173] Biber.pm:4084> INFO - Sorting list 'nty/global//global/global' of type 'entry' with template 'nty' and locale 'en-US'
+[173] Biber.pm:4090> INFO - No sort tailoring available for locale 'en-US'
+[174] bbl.pm:652> INFO - Writing 'ft.bbl' with encoding 'UTF-8'
+[174] bbl.pm:755> INFO - Output to ft.bbl
