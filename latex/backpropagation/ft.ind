@@ -28,6 +28,10 @@
 
   \indexspace
 
+  \item kernel, \hyperpage{3}
+
+  \indexspace
+
   \item layer, \hyperpage{2}
     \subitem dense, \hyperpage{3}
     \subitem fully connected, \hyperpage{3}

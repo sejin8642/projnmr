@@ -184,7 +184,7 @@ Now consider a hidden layer that contains \(N\) regular neurons which take the s
 	\item \(w_{i}\) = weight vector for the \(i\)-th neuron where \(1 \le i \le N\)
 	\item \(w_{ij}\) = \(j\)-th component of \(w_{i}\) where \(1 \le j \le M - 1\)
 	\item \(b_{i}\) = \(w_{iM}\) = bias for the \(i\)-th neuron
-	\item \textbf{W} = \(N \times M\) weight matrix where \(\textbf{W}_{ij} = w_{ij}\)  
+	\item \textbf{W} = \(N \times M\) weight matrix (or \textbf{kernel}\index{kernel}) where \(\textbf{W}_{ij} = w_{ij}\)  
 	\item \(o_{i}\) = \(g([\textbf{Wa}]_{i})\) = output scalar from the \(i\)-th neuron \(1 \le i \le N\)
 	\item \(o_{N+1}\) = 1 = output scalar from the bias neuron
 \end{itemize}
@@ -271,7 +271,7 @@ Even though nothing prevents activation function to depend on any variables, we 
 % Second Section: Backpropagation
 \clearpage
 \section{Backpropagation}
-With a fully connected sequential neural network to consider, we can now discuss what backpropagation is in detail. For our model \(h\), weights \(\w\) are model parameters we want to optimize by training, and \(L\), \(N_{k}\), \(g_{k}\) (with \(1 \le k \le L\)), \(g_{L+1}\) are hyperparameters to be tuned for validation. 
+With a fully connected sequential neural network to consider, we can now discuss what backpropagation is in detail. For our model \(h\), weights \(\w\) are model parameters we want to optimize by training. For validation, \(L\), \(N_{k}\), \(g_{k}\) (with \(1 \le k \le L\)), and \(\sigma\) are hyperparameters to be tuned.
 
 % 2.1 Cost Function
 \subsection{Cost Function}
@@ -330,7 +330,7 @@ where \(1 \le l \le L+1\) and the number of summands is determined by \ref{eq1.7
 	\pd{c^{l}_{r}}{\w}
 	= \sum_{s=1}^{N_{l-1}+1}(\pd{w^{l}_{rs}}{\w}a^{l}_{s}+w^{l}_{rs}\pd{a^{l}_{s}}{\w})\label{eq2.6}
 \end{equation}
-where we know \(a^{l}\) depends on weights only in layers that come before the \(l\)-th layer if \(1 < l\). Thus, \ref{eq2.6} is simply 0 if \(l < k\). 
+where we know \(a^{l}\) depends on weights only in layers that come before the \(l\)-th hidden layer (or output layer if \(l = L+1\)) if \(1 < l\). Thus, \ref{eq2.6} is simply 0 if \(l < k\). 
 
 If \(l = k\), then:
 \begin{equation}
