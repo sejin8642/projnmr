@@ -1,10 +1,23 @@
 #!/usr/bin/env python3
 
+#SBATCH --job-name=baseline
+
+#SBATCH --partition=shared
+#SBATCH --time=0-10:00:00 ## time format is DD-HH:MM:SS
+
+## task-per-node x cpus-per-task should not typically exceed core count on an individual node
+#SBATCH --nodes=1
+#SBATCH --tasks-per-node=1
+#SBATCH --cpus-per-task=17
+#SBATCH --mem-per-cpu=2G ## max amount of memory per node you require
+
+#SBATCH --output=baseline.%A.out
+
 # python  script to generate random data set using ftnmr module with baseline artifact
 from pathlib import Path
 import sys
-sys.path.insert(1, str(Path.home()/'gd'/'ftnmr'/'scripts'))
-sys.path.insert(1, str(Path.home()/'gd'/'projnmr'/'scripts'))
+sys.path.insert(1, str(Path.home()/'gd'/'projects'/'ftnmr'/'scripts'))
+sys.path.insert(1, str(Path.home()/'gd'/'projects'/'projnmr'/'scripts'))
 
 import h5py
 import numpy as np
@@ -14,18 +27,17 @@ from numpy.random import uniform, randint
 from concurrent import futures
 from string import ascii_letters as al
 import logging
-import datetime as dt
+import secrets
 
 def generateData(
         n,
         N,
-        hours=0,
         dir_path=Path.cwd(),
         file_name='filename',
-        timestamp='2022',
         data_dir='data',
         log_dir='log',
         data_size_power=7,
+        data_length=2**16,
         dtype='float32'):
     """
     generateData simulates ftnmr.spectrometer.measure and saves its output as hdf5 files
@@ -36,8 +48,6 @@ def generateData(
         n-th data block file index used for hdf5 file naming
     N: int
         Total number of data blocks
-    hours: int
-        hours to delay timestamp for log info (used on remote clusters that have different time)
     dir_path: PosixPath (or None)
         Posix directory path to put all the output (default cwd). If no path was provided,
         all data will be saved in the current directory of the scrypt file
@@ -49,17 +59,40 @@ def generateData(
         directory name in which to save logs
     data_size_power: int
         Exponent of two that yields mininum hdf5 file size in megabytes 
-        (default 7, which is pow(2, 7) or 128 megabytes)
+        (default 7, which is pow(2, 7) or 128 megabytes). 
+    data_length: int
+        Length of the data. It cannot be greater than 2^16, and it should be a some power of 2.
+        For example, 2**10=1024 is an acceptable data length size (default 2**16)
     dtype: str
         Data type for the data (default float32)
     """
     # append index number to file name
     file_name = file_name + str(n).zfill(len(str(N)))
 
-    # spectrometer object instantiation with total number of measurements
+    # spectrometer object instantiation with single data instance size
     spec = spectrometer()
-    number_of_measurements = int(pow(2, data_size_power+19)/spec.shift.nbytes)
+    instance_size_in_bytes = np.dtype(dtype).itemsize*data_length 
+
+    # make sure rescale ratio is greater than or equal to 1 to reduce the output data size
+    assert data_length <= spec.nf 
+    rescale_ratio = int(spec.nf/data_length)
+
+    # processing the final spectrometer output if data_length is smaller then spec.nf
+    # it basically shrinnks the size of the spectrometer output using np.max function
+    if data_length == spec.nf:
+        def dataProcess():
+            return spec()
+    else:
+        def dataProcess():
+            target = np.reshape(spec.target, (data_length, rescale_ratio))
+            spectra = np.reshape(spec.spectra, (data_length, rescale_ratio))
+            return np.max(spectra, axis=1), np.max(target, axis=1) 
+   
+    # total number of measurements based on bytes (19 = 10 + 10 - 1) and log step size
+    number_of_measurements = int(2**(data_size_power+19)/instance_size_in_bytes)
     log_step_size = int(pow(2, np.log2(number_of_measurements) - 4))
+
+    # strings for logging
     NofM_str = str(number_of_measurements)
     digits = len(NofM_str)
 
@@ -70,8 +103,8 @@ def generateData(
 
     # dynamically simulate and write data to hdf5 file
     with h5py.File(dir_path/data_dir/(file_name + '.hdf5'), 'w') as f:
-        f.create_dataset('data', (number_of_measurements, spec.nf), dtype=np.float32)
-        f.create_dataset('target', (number_of_measurements, spec.nf), dtype=np.float32)
+        f.create_dataset('data', (number_of_measurements, data_length), dtype=dtype)
+        f.create_dataset('target', (number_of_measurements, data_length), dtype=dtype)
 
         # random generation and measurements of metabolites
         for p in range(0, number_of_measurements, log_step_size):
@@ -80,40 +113,51 @@ def generateData(
                 moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
                 spec.artifact(baseline=True)
                 spec.measure(moles=moles)
-                f['data'][m, :], f['target'][m, :] = spec()
+                f['data'][m, :], f['target'][m, :] = dataProcess()
 
             # log info to append
             message = str(p+log_step_size).zfill(digits) + '/' + NofM_str + " measurements done"
             logging.info(message)
 
 def main():
-    N = 4 # number of hdf5 data 
-    hours = 14 # hours to delay timestamp for log info (remote system might have different time)
+    N = 16 # number of hdf5 data 
     dir_path = Path.cwd() # current working directory
 
     # create directories in which to save data and logs
-    timestamp = (dt.datetime.now() + dt.timedelta(hours=hours)).strftime('.%Y-%m-%d~%I:%M%p')
-    data_dir = 'data' + timestamp
-    log_dir = 'log' + timestamp
+    hash_string = secrets.token_hex(4)
+    data_dir = 'data.' + hash_string
+    log_dir = 'log.' + hash_string
     Path(data_dir).mkdir()
     Path(log_dir).mkdir()
 
     # chemical shift range for the data
+    data_length = 2**10
     spec = spectrometer()
+    rescale_ratio = int(spec.nf/data_length)
+    rescaled_shift = spec.shift[::rescale_ratio]
     with h5py.File(dir_path / 'chemical_shift.hdf5', 'w') as f:
-        f.create_dataset('shift', data=spec.shift, dtype=np.float32)
+        f.create_dataset('shift', data=rescaled_shift, dtype=np.float32)
+
 
     # get that data!!!
     with futures.ProcessPoolExecutor() as executor:
+        futures_list = []
         for n in range(N):
-            executor.submit(generateData, n, N,
-                    hours=hours, 
+            future = executor.submit(
+                    generateData, 
+                    n, 
+                    N,
                     dir_path=dir_path, 
                     file_name='baseline', 
                     data_dir=data_dir, 
                     log_dir=log_dir,
-                    data_size_power=6,
+                    data_size_power=8,
+                    data_length=data_length,
                     dtype='float32')
+            futures_list.append(future)
+
+        for future in futures.as_completed(futures_list):
+            result = future.result()
 
 if __name__ == '__main__': 
     main()
