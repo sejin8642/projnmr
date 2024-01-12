@@ -8,7 +8,7 @@
 ## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --cpus-per-task=17
+#SBATCH --cpus-per-task=21
 #SBATCH --mem-per-cpu=2G ## max amount of memory per node you require
 
 #SBATCH --output=baseline.%A.out
@@ -120,7 +120,7 @@ def generateData(
             logging.info(message)
 
 def main():
-    N = 16 # number of hdf5 data 
+    N = 20 # number of hdf5 data 
     dir_path = Path.cwd() # current working directory
 
     # create directories in which to save data and logs
