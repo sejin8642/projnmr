@@ -111,7 +111,7 @@ def generateData(
             # simulate and save data as hdf5
             for m in range(p, p + log_step_size):
                 moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
-                spec.artifact(baseline=True)
+                spec.artifact(baseline=True, smoothness=True)
                 spec.measure(moles=moles)
                 f['data'][m, :], f['target'][m, :] = dataProcess()
 
