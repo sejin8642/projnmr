@@ -123,10 +123,11 @@ def main():
     N = 20 # number of hdf5 data 
     dir_path = Path.cwd() # current working directory
 
-    # create directories in which to save data and logs
+    # create directories in which to save data, logs, and chemical shift range hdf5
     hash_string = secrets.token_hex(4)
     data_dir = 'data.' + hash_string
     log_dir = 'log.' + hash_string
+    shift_range = 'chemical_shift.' + hash_string + '.hdf5'
     Path(data_dir).mkdir()
     Path(log_dir).mkdir()
 
@@ -135,7 +136,7 @@ def main():
     spec = spectrometer()
     rescale_ratio = int(spec.nf/data_length)
     rescaled_shift = spec.shift[::rescale_ratio]
-    with h5py.File(dir_path / 'chemical_shift.hdf5', 'w') as f:
+    with h5py.File(dir_path / shift_range, 'w') as f:
         f.create_dataset('shift', data=rescaled_shift, dtype=np.float32)
 
 
