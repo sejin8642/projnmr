@@ -3,7 +3,7 @@
 #SBATCH --job-name=baseline
 
 #SBATCH --partition=shared
-#SBATCH --time=0-10:00:00 ## time format is DD-HH:MM:SS
+#SBATCH --time=1-12:00:00 ## time format is DD-HH:MM:SS
 
 ## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 #SBATCH --nodes=1
@@ -16,6 +16,7 @@
 # python  script to generate random data set using ftnmr module with baseline artifact
 from pathlib import Path
 import sys
+import os
 sys.path.insert(1, str(Path.home()/'gd'/'projects'/'ftnmr'/'scripts'))
 sys.path.insert(1, str(Path.home()/'gd'/'projects'/'projnmr'/'scripts'))
 
@@ -66,6 +67,12 @@ def generateData(
     dtype: str
         Data type for the data (default float32)
     """
+    ######## change your artifact types here before running the script #######
+    baseline = True
+    phase_shift = False
+    smoothness = False
+    ##########################################################################
+
     # append index number to file name
     file_name = file_name + str(n).zfill(len(str(N)))
 
@@ -102,6 +109,7 @@ def generateData(
             level=logging.DEBUG)
 
     # dynamically simulate and write data to hdf5 file
+    logging.info(f"Total number of measurements are " + NofM_str)
     with h5py.File(dir_path/data_dir/(file_name + '.hdf5'), 'w') as f:
         f.create_dataset('data', (number_of_measurements, data_length), dtype=dtype)
         f.create_dataset('target', (number_of_measurements, data_length), dtype=dtype)
@@ -111,7 +119,10 @@ def generateData(
             # simulate and save data as hdf5
             for m in range(p, p + log_step_size):
                 moles = {al[25+k]:(mg(), uniform(0, 50)) for k in range(1, randint(1, 15))} 
-                spec.artifact(baseline=True, smoothness=True)
+                spec.artifact(
+                        baseline=baseline, 
+                        phase_shift=phase_shift, 
+                        smoothness=smoothness)
                 spec.measure(moles=moles)
                 f['data'][m, :], f['target'][m, :] = dataProcess()
 
@@ -123,11 +134,13 @@ def main():
     N = 20 # number of hdf5 data 
     dir_path = Path.cwd() # current working directory
 
+    # Retrieve the Slurm job allocation number from the environment variable
+    job_id = os.environ.get('SLURM_JOBID')
+
     # create directories in which to save data, logs, and chemical shift range hdf5
-    hash_string = secrets.token_hex(4)
-    data_dir = 'data.' + hash_string
-    log_dir = 'log.' + hash_string
-    shift_range = 'chemical_shift.' + hash_string + '.hdf5'
+    data_dir = f"data.{job_id}"
+    log_dir = f"log.{job_id}"
+    shift_range = f"chemical_shift.{job_id}.hdf5"
     Path(data_dir).mkdir()
     Path(log_dir).mkdir()
 
