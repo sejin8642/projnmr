@@ -92,8 +92,9 @@ def generateData(
     else:
         def dataProcess():
             target = np.reshape(spec.target, (data_length, rescale_ratio))
+            target2 = np.reshape(spec.target2, (data_length, rescale_ratio))
             spectra = np.reshape(spec.spectra, (data_length, rescale_ratio))
-            return np.max(spectra, axis=1), np.max(target, axis=1) 
+            return np.max(spectra, axis=1), np.max(target, axis=1), np.max(target2, axis=1)
    
     # total number of measurements based on bytes (19 = 10 + 10 - 1) and log step size
     number_of_measurements = int(2**(data_size_power+19)/instance_size_in_bytes)
@@ -113,6 +114,7 @@ def generateData(
     with h5py.File(dir_path/data_dir/(file_name + '.hdf5'), 'w') as f:
         f.create_dataset('data', (number_of_measurements, data_length), dtype=dtype)
         f.create_dataset('target', (number_of_measurements, data_length), dtype=dtype)
+        f.create_dataset('target2', (number_of_measurements, data_length), dtype=dtype)
 
         # random generation and measurements of metabolites
         for p in range(0, number_of_measurements, log_step_size):
@@ -123,8 +125,8 @@ def generateData(
                         baseline=baseline, 
                         phase_shift=phase_shift, 
                         smoothness=smoothness)
-                spec.measure(moles=moles)
-                f['data'][m, :], f['target'][m, :] = dataProcess()
+                spec.measure(moles=moles, extra_target=True)
+                f['data'][m, :], f['target'][m, :], f['target2'][m, :]= dataProcess()
 
             # log info to append
             message = str(p+log_step_size).zfill(digits) + '/' + NofM_str + " measurements done"
@@ -165,7 +167,7 @@ def main():
                     file_name='baseline', 
                     data_dir=data_dir, 
                     log_dir=log_dir,
-                    data_size_power=8,
+                    data_size_power=1,
                     data_length=data_length,
                     dtype='float32')
             futures_list.append(future)
