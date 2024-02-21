@@ -1,6 +1,6 @@
 # Security Policy
 
-## Supported Versions
+### Supported Versions
 
 Currently no versions of my project is supported with security updates from my end. 
 The project is meant to provide useful tools used in NMR research, and all of the Python dependencies used for this project are well tested and being updated continously. 
