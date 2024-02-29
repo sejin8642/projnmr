@@ -4,9 +4,27 @@ from tensorflow import keras
 
 # list of NMR NN models
 def model_NMR(input_length, GRU_unit, first_filter_num, second_filter_num):
+    """
+    Returns NMR artifact correctional Keras model
+    
+    parameters
+    ----------
+    input_length: int or None
+        NMR spectrum input data length. It is usually between 2**10 and 2**16. Set it to None to accept arbitrary length
+    GRU_unit: int
+        Number of GRUs in BRNN layer. It should be a power of 2, otherwise you will get an assert error
+    first_filter_num: int
+        Number of the first CNN filters (should be a power of 2)
+    second_filter_num: int
+        Number of the second CNN filters (should be a power of 2)
+
+    return
+    ------
+    model: Keras Model
+        Keras Model with random weights
+    """
     # check your input arguments are powers of 2
     l2 = np.log2
-    assert l2(input_length).is_integer(), "input_length is not a power of 2"
     assert l2(GRU_unit).is_integer(), "GRU_unit is not a power of 2"
     assert l2(first_filter_num).is_integer(), "first_filter_num is not a power of 2"
     assert l2(second_filter_num).is_integer(), "second_filter_num is not a power of 2"
