@@ -3,7 +3,7 @@
 #SBATCH --job-name=PHB_training
 
 #SBATCH --partition=kill-shared
-#SBATCH --time=0-12:00:00 ## time format is DD-HH:MM:SS
+#SBATCH --time=1-12:00:00 ## time format is DD-HH:MM:SS
 
 ## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 #SBATCH --nodes=1
