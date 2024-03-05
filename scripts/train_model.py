@@ -38,6 +38,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # main fn modules
 import time
+from datetime import datetime
 import ftnmr
 import NN_models
 import tensorflow as tf
@@ -45,6 +46,7 @@ from tensorflow import keras
 
 def main():
     start_time = time.time()
+    date_str = datetime.now().strftime("%Y:%H:%M:%S")
 
     # load the data and split them into train and validation datasets
     data_dir = Path.home() / Path('data/NMR.SH8.data/data.1390177')
@@ -75,7 +77,7 @@ def main():
     )
 
     # save the best performant model by monitoring validation loss 
-    weight_path = "PHB_best.mar.01.2024.hdf5"
+    weight_path = "PHB_best." + date_str + ".hdf5"
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
             weight_path, 
             monitor='val_loss', 
@@ -85,12 +87,12 @@ def main():
 
     # log files
     tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs')
-    csv_logger = tf.keras.callbacks.CSVLogger('training_log.csv', append=True)
+    csv_logger = tf.keras.callbacks.CSVLogger('./logs/training_log' + date_str + '.csv', append=True)
 
     # model compilation
     model_PHB.compile(
         loss="LogCosh",
-        optimizer=keras.optimizers.Nadam(learning_rate=0.005, clipvalue=1.0),
+        optimizer=keras.optimizers.Nadam(learning_rate=0.005, clipnorm=1),
         metrics=['mse'])
 
     # fit the model (takes longest)
@@ -102,7 +104,7 @@ def main():
         callbacks=callbacks)
 
     # save history content
-    history_hdf5_path = str(data_dir.parent / 'history.mar.03.2024.hdf5')
+    history_hdf5_path = str('./logs/history.' + date_str + '.hdf5')
     ftnmr.save_history(history, history_hdf5_path) 
 
     # prints the total training time into sbatch output 
