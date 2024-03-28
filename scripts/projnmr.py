@@ -127,10 +127,10 @@ def metaboliteGenerator(min_N = 4, max_N = 10):
     # random shift to incorporate aldehyde shift ~ 9.7
     def rand(x):
         if x != 1:
-            return uniform(0.5, 6.0)
+            return uniform(0.5, 7.5)
         else:
             if np.random.randint(0, 10):
-                return uniform(0.5, 6.0)
+                return uniform(0.5, 7.5)
             else:
                 return uniform(9.0, 10.0)
 
