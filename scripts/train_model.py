@@ -54,7 +54,7 @@ def main():
 
     # load the data and split them into train and validation datasets
     files = os.listdir('.')
-    os.path.isdir = isd
+    isd = os.path.isdir 
     data_dir = [dt for dt in files if isd(dt) and dt.startswith('data')][0]
     PHB_datasets = ftnmr.sliced_spec_data(data_dir, batch_size=64, numpy_array=False)
     dataset_train = PHB_datasets[0]
