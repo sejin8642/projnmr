@@ -18,6 +18,7 @@
 import platform
 from pathlib import Path
 import sys
+
 os_name = platform.system()
 if os_name == 'Darwin':
 	gd_path = str(Path.home()/'Library/Mobile Documents/com~apple~CloudDocs/gd')
@@ -45,11 +46,16 @@ import tensorflow as tf
 from tensorflow import keras
 
 def main():
+    # keep track of training time
     start_time = time.time()
-    date_str = datetime.now().strftime("%Y:%H:%M:%S")
+
+    # Retrieve the Slurm job allocation number from the environment variable
+    job_id = os.environ.get('SLURM_JOBID')
 
     # load the data and split them into train and validation datasets
-    data_dir = Path.home() / Path('data/NMR.SH8.data/data.1390177')
+    files = os.listdir('.')
+    os.path.isdir = isd
+    data_dir = [dt for dt in files if isd(dt) and dt.startswith('data')][0]
     PHB_datasets = ftnmr.sliced_spec_data(data_dir, batch_size=64, numpy_array=False)
     dataset_train = PHB_datasets[0]
     dataset_valid = PHB_datasets[1]
@@ -77,7 +83,7 @@ def main():
     )
 
     # save the best performant model by monitoring validation loss 
-    weight_path = "PHB_best." + date_str + ".hdf5"
+    weight_path = f"model_{job_id}.hdf5"
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
             weight_path, 
             monitor='val_loss', 
@@ -87,12 +93,15 @@ def main():
 
     # log files
     tensorboard = tf.keras.callbacks.TensorBoard(log_dir='./logs')
-    csv_logger = tf.keras.callbacks.CSVLogger('./logs/training_log' + date_str + '.csv', append=True)
+    csv_logger = tf.keras.callbacks.CSVLogger(f'./logs/training_log_{job_id}.csv', append=True)
 
     # model compilation
     model_PHB.compile(
-        loss="LogCosh",
-        optimizer=keras.optimizers.Nadam(learning_rate=0.005, clipnorm=1),
+        loss="mse",
+        optimizer=keras.optimizers.Nadam(
+            learning_rate=0.00005, 
+            clipnorm=0.2,
+            epsilon=1e-05),
         metrics=['mse'])
 
     # fit the model (takes longest)
@@ -100,11 +109,11 @@ def main():
     history = model_PHB.fit(
         dataset_train,
         validation_data=dataset_valid,
-        epochs=256,
+        epochs=128,
         callbacks=callbacks)
 
     # save history content
-    history_hdf5_path = str('./logs/history.' + date_str + '.hdf5')
+    history_hdf5_path = f'./logs/history_{job_id}.hdf5'
     ftnmr.save_history(history, history_hdf5_path) 
 
     # prints the total training time into sbatch output 
@@ -112,4 +121,5 @@ def main():
     print(f"Total training time: {training_time:.2f} seconds")
 
 if __name__ == '__main__': 
+    print("comments about the model training", end="\n\n")
     main()
