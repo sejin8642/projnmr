@@ -8,7 +8,7 @@
 ## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:NV-RTX5000:1 
-#SBATCH --mem=16gb
+#SBATCH --mem=32gb
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=4
 
