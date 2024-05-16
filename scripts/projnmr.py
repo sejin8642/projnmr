@@ -134,8 +134,8 @@ def metaboliteGenerator(min_N = 4, max_N = 10):
             else:
                 return uniform(9.0, 10.0)
 
-    # hydrogen groups dictionary (100 < T2 < 250) and couplings list (2 < J < 15)
-    hydrogens = {al[n]:(x, rand(x), uniform(100.0, 250.0)) for n, x in enumerate(groups)}
+    # hydrogen groups dictionary (50 < T2 < 250) and couplings list (2 < J < 15)
+    hydrogens = {al[n]:(x, rand(x), uniform(50.0, 250.0)) for n, x in enumerate(groups)}
     couplings = [(al[n-1], al[n], uniform(2.0, 15.0)) for n in range(1, length) if n not in cut]
 
     return ftnmr.molecule(hydrogens=hydrogens, couplings=couplings)
