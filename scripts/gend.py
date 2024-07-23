@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#SBATCH --job-name=baseline
+#SBATCH --job-name=PSB_0.250
 
 #SBATCH --partition=shared
 #SBATCH --time=1-12:00:00 ## time format is DD-HH:MM:SS
@@ -11,7 +11,7 @@
 #SBATCH --cpus-per-task=21
 #SBATCH --mem-per-cpu=4G ## max amount of memory per node you require
 
-#SBATCH --output=baseline.%A.out
+#SBATCH --output=data_gen.%A.out
 
 # python  script to generate random data set using ftnmr module with baseline artifact
 from pathlib import Path
@@ -34,6 +34,7 @@ def generateData(
         n,
         N,
         dir_path=Path.cwd(),
+        seed,
         file_name='filename',
         data_dir='data',
         log_dir='log',
@@ -52,6 +53,11 @@ def generateData(
     dir_path: PosixPath (or None)
         Posix directory path to put all the output (default cwd). If no path was provided,
         all data will be saved in the current directory of the scrypt file
+    seed: int
+        seed number for numpy random generators. The seed is explicitly fed into each sub-processes
+        for concurrent.Futures so that each process will generate different results. It turns out
+        if you don't provide the seed, each process will use the same seed, so you are doing the 
+        same calculations across the multiple processes
     file_name: str
         Saved data and log file name without file extension (default filename)
     data_dir: str
@@ -69,15 +75,18 @@ def generateData(
     """
     ######## change your artifact types here before running the script #######
     baseline = True
-    phase_shift = False
+    phase_shift = True
     smoothness = False
     ##########################################################################
+
+    # provide seed for numpy random generators
+    np.random.seed(seed)
 
     # append index number to file name
     file_name = file_name + str(n).zfill(len(str(N)))
 
     # spectrometer object instantiation with single data instance size
-    spec = spectrometer()
+    spec = spectrometer(ps_max=0.250, shift_minimum=7)
     instance_size_in_bytes = np.dtype(dtype).itemsize*data_length 
 
     # make sure rescale ratio is greater than or equal to 1 to reduce the output data size
@@ -131,7 +140,17 @@ def generateData(
             logging.info(message)
 
 def main():
-    N = 20 # number of hdf5 data 
+    print()
+    print("Jul 22, 2024: This is to generate PHB data with maximum chemical shift of 8. The maximum phase shift factor is increased from 0.125 to 0.250. Also, phase shift can be negative")
+    print()
+
+    # seeds list generation
+    base_seed = 6547  # A base seed for reproducibility
+    seed_sequence = np.random.SeedSequence(base_seed)
+    N = 20 # Number of parallel processes
+    child_seeds = seed_sequence.spawn(N)
+    seeds = [s.generate_state(1)[0] for s in child_seeds]
+
     dir_path = Path.cwd() # current working directory
 
     # Retrieve the Slurm job allocation number from the environment variable
@@ -145,27 +164,25 @@ def main():
     Path(log_dir).mkdir()
 
     # chemical shift range for the data
-    data_length = 2**10
-    spec = spectrometer()
-    rescale_ratio = int(spec.nf/data_length)
-    rescaled_shift = spec.shift[::rescale_ratio]
+    data_length = 2**15
+    spec = spectrometer(shift_minimum=7)
     with h5py.File(dir_path / shift_range, 'w') as f:
-        f.create_dataset('shift', data=rescaled_shift, dtype=np.float32)
-
+        f.create_dataset('shift', data=spec.shift, dtype=np.float32)
 
     # get that data!!!
     with futures.ProcessPoolExecutor() as executor:
         futures_list = []
-        for n in range(N):
+        for n, seed in enumerate(seeds):
             future = executor.submit(
                     generateData, 
                     n, 
                     N,
                     dir_path=dir_path, 
-                    file_name='baseline', 
+                    seed,
+                    file_name='PSB250both', 
                     data_dir=data_dir, 
                     log_dir=log_dir,
-                    data_size_power=8,
+                    data_size_power=9,
                     data_length=data_length,
                     dtype='float32')
             futures_list.append(future)
