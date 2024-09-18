@@ -11,7 +11,7 @@
 #SBATCH --cpus-per-task=40
 #SBATCH --mem-per-cpu=4G ## max amount of memory per node you require
 
-#SBATCH --output=NMR_accuracy.%A.out
+#SBATCH --output=accuracy.%A.out
 
 print()
 print("python script file name: ", __file__)
@@ -27,7 +27,7 @@ sys.path.insert(1, str(Path.home()/'gd'/'projects'/'ftnmr'/'scripts'))
 sys.path.insert(1, str(Path.home()/'gd'/'projects'/'projnmr'/'scripts'))
 
 import logging
-import ftnmr
+from ftnmr import NMR_result
 import time
 from concurrent import futures
 from copy import copy
@@ -42,8 +42,8 @@ subdirectories.sort()
 sample_paths = [str(dir_path / subdir) for subdir in subdirectories]
 
 # paths for model and database
-model_path = Path.home() / Path('writing/hdf5data/model_Jul_30.hdf5')
-database_file = Path('data/aug_29_2024_ATA_to_WAS_database/ATA_to_WAS.aug_29_2024_kill.npy')
+model_path = Path.home() / Path('data/jul_22_data/model_Jul_30.hdf5')
+database_file = Path('data/aug_28_ATA_to_WAS_database/database_ATA.npy')
 database_path = Path.home() / database_file
 
 def subprocess(path):
@@ -72,7 +72,7 @@ def subprocess(path):
     start_time = time.time()
     try:
         logger.info(f'Completed processing {path}')
-        return  ftnmr.NMR_result(model_path, path, database_path)
+        return NMR_result(model_path, path, database_path)
     except Exception as e:
         logger.error(f'Error processing {path}: {e}')
         raise
