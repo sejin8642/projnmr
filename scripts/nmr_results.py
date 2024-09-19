@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 
 #SBATCH --job-name=NMR_accuracy
-
-#SBATCH --partition=kill-shared
+#SBATCH --partition=shared
 #SBATCH --time=3-00:00:00 ## time format is DD-HH:MM:SS
-
-## task-per-node x cpus-per-task should not typically exceed core count on an individual node
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=40
 #SBATCH --mem-per-cpu=4G ## max amount of memory per node you require
-
 #SBATCH --output=accuracy.%A.out
 
 print()
@@ -30,13 +26,13 @@ import logging
 from ftnmr import NMR_result
 import time
 from concurrent import futures
-from copy import copy
 import pickle
 
-# data parent directory
+# job id and data parent directory
+job_id = os.environ.get('SLURM_JOBID')
 dir_path = Path.home() / Path('data/BMSE')
 
-# Get a list of all subdirectories
+# Get a list of all subdirectories of BMSE data
 subdirectories = [subdir.name for subdir in dir_path.iterdir() if subdir.is_dir()]
 subdirectories.sort()
 sample_paths = [str(dir_path / subdir) for subdir in subdirectories]
@@ -48,7 +44,7 @@ database_path = Path.home() / database_file
 
 def subprocess(path):
     # Create a log directory if it doesn't exist
-    log_dir = Path('logs')
+    log_dir = Path(f'logs.{job_id}')
     log_dir.mkdir(exist_ok=True)
 
     # Create a unique log file name for this subprocess
@@ -82,17 +78,18 @@ def subprocess(path):
         logger.info(f'Execution time: {execution_time:.2f} seconds')
         logger.removeHandler(handler)
 
+results = [None]*len(sample_paths)
+
 # parallel looping
-results = len(sample_paths)*[None]
 with futures.ProcessPoolExecutor(max_workers=40) as executor:
     futures_list = []
     for i, path in enumerate(sample_paths):
         future = executor.submit(subprocess, path)
         futures_list.append([i, future])
 
-    # copy results to results list
+    # pass results to results list
     for ind, future in futures_list:
-        results[ind] = copy(future.result())
+        results[ind] = future.result()
 
-with open('NMR_results.pkl', 'wb') as f:
+with open(f'NMR_results.{job_id}.pkl', 'wb') as f:
     pickle.dump(results, f)
