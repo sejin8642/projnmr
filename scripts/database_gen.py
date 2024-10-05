@@ -31,7 +31,6 @@ import numpy as np
 import time
 import ftnmr
 from concurrent import futures
-from copy import copy
 
 # logger
 logger = logging.getLogger(__name__)
@@ -78,7 +77,7 @@ with futures.ProcessPoolExecutor(max_workers=40) as executor:
 
     # copy results to ATA_to_WAS array
     for ind, future in futures_list:
-        ATA_to_WAS[ind] = copy(future.result())
+        ATA_to_WAS[ind] = future.result()
 
 # save the database
 elapsed_time = (time.time() - start_time) / 60
